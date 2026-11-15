@@ -1,0 +1,7 @@
+# Store and check out all text with LF line endings, on each machine.
+# Without this rule, a working tree that moves from a machine with
+# core.autocrlf=true shows each line of each file as changed.
+* text=auto eol=lf
+
+# For shell scripts, LF is a requirement: /bin/sh fails on the \r in the shebang.
+*.sh text eol=lf
