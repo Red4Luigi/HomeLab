@@ -134,6 +134,18 @@ SMART against the baseline of 9 August: each attribute that decides a return is 
 
 **The counters agree with the logs.** `242 Total_LBAs_Read` was approximately 7,814,098,521, and the drive has 7,814,037,168 sectors. So the read pass really read each sector. `241 Total_LBAs_Written` is approximately 76 million sectors (approximately 39 GB) above one full drive. That is almost exactly the 0.97% that the first run reached before the logout stopped it.
 
+## 2026-08-11: the password prompt that came back
+
+**Symptom.** I set *Allowed Sudo Commands (No Password)* to `ALL` for my account. `sudo` still asked for the password, also in a new session.
+
+**Assumption.** The setting was not saved, or the session had to start again.
+
+**Cause.** Both sudo fields had `ALL`. That makes two rules: `ALL=(ALL) ALL` and `ALL=(ALL) NOPASSWD: ALL`. In sudoers, the last match wins, and the plain rule asks for the password. The web UI still showed both fields as set.
+
+**Fix.** I cleared *Allowed sudo commands* and kept only the field without password ([TrueNAS runbook](../runbooks/truenas.md)).
+
+**Next time.** Remove the cached timestamp before each test ([commands](../commands.md)). sudo keeps it for approximately 15 minutes. So each check after the first password tested the cache, not the rule.
+
 ## 2026-08-12: the copy from Windows
 
 I copied approximately 1 TB from the Windows workstation to the NAS, through a temporary SMB share, before the workstation moved to Linux. An SMB share can be on a Generic dataset, because Samba handles the lookups that ignore case. So a temporary SMB dataset was not necessary.

@@ -1,6 +1,6 @@
 # Build log, phase 2: media and self-hosted services
 
-This file records what happened in phase 2, with dates. The configuration is in the runbooks: [Caddy](../runbooks/caddy.md), [Jellyfin](../runbooks/jellyfin.md), [Tailscale](../runbooks/tailscale.md) and [TrueNAS](../runbooks/truenas.md). The decisions are in [`docs/`](../docs/).
+This file records what happened in phase 2, with dates. The configuration is in the runbooks: [Caddy](../runbooks/caddy.md), [Forgejo](../runbooks/forgejo.md), [Homepage](../runbooks/homepage.md), [Jellyfin](../runbooks/jellyfin.md), [Tailscale](../runbooks/tailscale.md) and [TrueNAS](../runbooks/truenas.md). The decisions are in [`docs/`](../docs/).
 
 ## 2026-08-27 to 28: the first containers (the apps pool, Caddy and Jellyfin)
 
@@ -106,3 +106,80 @@ This was the first time that the transcode limits of the NAS had an effect ([ser
 **Fix.** Jellyfin Media Player on the desktop. mpv handles all four natively, and the dashboard showed Direct Play. The server did not change.
 
 **Next time.** Read the reasons and put them in order before you make a theory. The container and the channels are cheap. Bitmap subtitles and HDR each force a full new encode.
+
+## 2026-09-22: Forgejo
+
+I deployed Forgejo from the catalogue of TrueNAS, with its own Postgres. There were two problems at the deployment and one with git.
+
+### The owner of the Postgres folder
+
+**Assumption.** Postgres runs as `apps` (568), as each other app here. So its folder gets `apps:apps`.
+
+**Cause.** The Postgres container of the catalogue runs as `999:999`. Postgres does not start unless it owns its data directory. Write access is not sufficient.
+
+**Fix.** `chown 999:999` on the host path. I found the problem before the first start.
+
+**Next time.** A bundled database is a second container, so it is a second user. Find the user of each container before you set the owner.
+
+### The restart loop
+
+**Symptom.** `mkdir: can't create directory '/var/lib/gitea/git': Permission denied`, then `docker setup failed`.
+
+**Assumption.** Another location on the server had no access.
+
+**Cause.** The same folder. `/var/lib/gitea` in the container is the host path of the data. *Enable ACL* was on, with no entry under it. The checkbox alone gives nothing.
+
+**Fix.** An ACL entry: USER `568`, Modify. The [Jellyfin runbook](../runbooks/jellyfin.md) already had this entry.
+
+**Next time.** The entry gives the access, not the checkbox. When an error names a path in the container, find its host path first.
+
+### A second URL for the remote
+
+**Symptom.** `git remote set-url --add forgejo <url>` gave `error: No such remote 'forgejo'`.
+
+**Assumption.** `set-url` makes the remote.
+
+**Cause.** `set-url` only changes a remote that exists. The repository had one remote, `origin`.
+
+**Fix.** A second `url` on `origin` ([Forgejo runbook](../runbooks/forgejo.md)).
+
+After that, `git remote -v` showed GitHub two times. `.git/config` had three `url` lines: GitHub, Forgejo and GitHub. I removed the extra line in the file. `set-url --delete` removes each match, so it would have removed both GitHub lines.
+
+**Next time.** Run `git remote -v` before you change a remote.
+
+## 2026-10-12 to 13: Homepage
+
+I deployed Homepage from the catalogue of TrueNAS. There were three problems.
+
+### Two fields filled from a wrong model
+
+I examined the configuration before the first deployment. Two fields were wrong:
+
+- **Mount Docker Socket.** I turned it on, because I thought that a read-only mount makes the access read-only. A read-only mount protects only the socket file. The full Docker API stays open, and that is root on the NAS ([Homepage runbook](../runbooks/homepage.md)).
+- **Allowed Hosts.** I entered the addresses of the NAS and the Pi, because I read the field as a list of permitted clients. It is the list of names that Homepage answers to.
+
+**Fix.** Before the deployment: the socket off, and the `donny.lu` name in *Allowed Hosts*.
+
+**Next time.** A mount flag describes the file, not the service behind it. A field with *hosts* in its name can mean either end of the connection. Find out which end before you fill it.
+
+### The key of the TrueNAS widget
+
+**Symptom.** The widget showed `TrueNAS authentication failed`.
+
+**Cause.** TrueNAS revokes the API key of a user when the key arrives over plain HTTP. It judges the connection that it receives. The widget called `https://truenas.donny.lu`, but Caddy forwarded to the HTTP port of the web UI. So the key arrived in clear text.
+
+**Fix.** The upstream of Caddy for TrueNAS moved to the HTTPS port ([Caddy runbook](../runbooks/caddy.md)).
+
+**Next time.** When a credential fails behind a proxy, examine what the backend receives, not what the client sends.
+
+### The redirect to the IP address
+
+**Symptom.** After the change to the HTTPS upstream, `truenas.donny.lu` sent the browser to the IP address and the port.
+
+**Assumption.** The browser cache kept an old redirect.
+
+**Cause.** A live `302` from TrueNAS. TrueNAS makes its redirect from `/` to `/ui/` from the `Host` header. To an HTTPS upstream, Caddy sends the address of the upstream as `Host`. I sent `curl` directly to TrueNAS, with and without `-H 'Host: truenas.donny.lu'`. Only the header changed, and `Location` followed it.
+
+**Fix.** `header_up Host {host}` in the TrueNAS block.
+
+**Next time.** Use `curl -sI` first. It has no cache, so one request shows if a redirect is old or live.
