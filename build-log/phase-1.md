@@ -29,8 +29,6 @@ Two warnings of the [build checklist](../docs/build-checklist.md) did not become
 
 **Cause.** A modern PSU has an 8-pin EPS lead that is made of two 4-pin halves. The halves come apart. So one cable is correct for boards with a 4-pin socket, such as the B85M-G, and for boards with an 8-pin socket. Divide the lead and connect one half.
 
-**Next time.** It looks the same as a missing cable. Know this before you order one.
-
 ### I skipped the bench test on purpose
 
 The build checklist asks for a bench test before the assembly: the CPU, one memory module and the PSU on the bench. I did not do it. All the parts arrived at the same time. A direct assembly made it easier to plan the cables as a whole. The board also did not stay out of the case between steps.
@@ -51,9 +49,9 @@ I flashed 3602 (2018-03-23), the last release of ASUS for this board.
 
 ### Secure Boot refused the installer of TrueNAS
 
-**Symptom.** *"The system found unauthorized changes on the firmware, operating system or UEFI drivers."* I had just flashed the BIOS of a used board. So this message looked like a problem with the board, not like a configuration problem.
+**Symptom.** *"The system found unauthorized changes on the firmware, operating system or UEFI drivers."*
 
-**Cause.** The BIOS flash turned Secure Boot on again, with a platform key loaded. The installer of TrueNAS is not signed with a key that the board has. The message had no relation to the owner before me.
+**Cause.** The BIOS flash turned Secure Boot on again, with a platform key loaded. The installer of TrueNAS is not signed with a key that the board has.
 
 **Fix.** `Boot → Secure Boot → OS Type → Other OS`.
 
@@ -66,15 +64,15 @@ I flashed 3602 (2018-03-23), the last release of ASUS for this board.
 **Assumption.** In this order:
 
 1. The cable, then the drive. I moved the drive to a 3 Gb/s port with a different cable, and it appeared.
-2. From that, I concluded that two of the four cables were bad and could not hold a 6 Gb/s link. This was wrong, and for a short time it was in the plan as a fact.
+2. From that, the conclusion was that two of the four cables were bad and could not hold a 6 Gb/s link. This was wrong, and for a short time it was in the plan as a fact.
 
-**Cause.** The port. A test with one variable at a time showed that both "bad" cables ran a drive at 6 Gb/s on ports 2 and 4. The two other cables worked on port 1. Port 1 was the only part that was present in each combination that failed. All four cables are good.
+**Cause.** The port. I compared the combinations that worked with the combinations that failed. Both "bad" cables ran a drive at 6 Gb/s on ports 2 and 4. The two other cables worked on port 1. Port 1 was the only part that was present in each combination that failed. All four cables are good.
 
 The fault depends on the cable because port 1 is degraded, not dead. The probable cause is worn contacts or a very small crack at the solder pads, on a board that is 13 years old. The shells of the connectors have different tolerances between manufacturers. A cable that holds tighter closes the weak contact, and a looser cable does not.
 
-**Fix.** None was necessary. The board has six ports for four devices. The port stayed on probation, and the burn-in gave the verdict: the negotiated link speed, the link resets in `dmesg`, and SMART attribute 199. The burn-in is the correct time for this test, because the drive is empty. In a pool, a drive that drops from such a port looks the same as a drive that fails.
+**Fix.** None was necessary. The board has six ports for four devices, but I kept port 1 in use. The burn-in proved that it still worked with this cable: the link speed, the link resets in `dmesg` and SMART attribute 199. The burn-in is the correct time for this test, because the drive is empty.
 
-**Next time.** Change one variable at a time. I changed the cable and the drive together. That made an evening out of a diagnosis of five minutes, and it gave a wrong answer that I was sure of.
+**Next time.** Change one variable at a time. I changed the cable and the drive together. That made an evening out of a diagnosis of five minutes, and it gave a wrong answer.
 
 ### Two `badblocks` processes ran on one drive
 
@@ -82,7 +80,7 @@ The fault depends on the cable because port 1 is degraded, not dead. The probabl
 
 **Cause.** `nohup: ignoring input` is only information. `nohup` prints it each time that stdin is a terminal. The first process had run correctly for one minute. The second start made a second `badblocks` in write mode on the same device.
 
-**Why it was important.** `badblocks -w` writes its pattern on the full disk. Then it reads the disk and expects to find the pattern. Two runs at the same time write over each other, so the run that survives reads the data of the other run. It reports almost each block as bad, which is a catastrophic result on a healthy drive. This happened on `sdb`, the drive on `SATA6G_1`. A false failure there would have looked like a confirmation of the port fault.
+**Why it was important.** `badblocks -w` writes its pattern on the full disk. Then it reads the disk and expects to find the pattern. Two runs at the same time write over each other, so the run that survives reads the data of the other run. It reports almost each block as bad. This happened on `sdb`, the drive on `SATA6G_1`. A false failure there would have looked like a confirmation of the port fault.
 
 **Fix.** I stopped both processes, not one. The disk already had patterns from both runs, so the result of the survivor had no value. I started one run again from block 0.
 
@@ -92,7 +90,7 @@ The fault depends on the cable because port 1 is degraded, not dead. The probabl
 
 **Assumption.** A disk fault or an I/O error stopped the run. `Interrupted at block N` looks the same as such a fault.
 
-**Cause.** The end of the session. `nohup` only makes a process ignore SIGHUP. A logout on a machine with systemd stops the cgroup of the login session with SIGTERM, which `nohup` does not stop. `sudo -i` did not help, because it stays in the same session. `badblocks` handles the signal correctly and prints `Interrupted at block N` when it stops. So the message describes a clean stop, not a fault.
+**Cause.** The end of the session. I had started the runs with `nohup`, on advice. `nohup` only makes a process ignore SIGHUP. A logout on a machine with systemd stops the cgroup of the login session with SIGTERM, which `nohup` does not stop. `sudo -i` did not help, because it stays in the same session. `badblocks` handles the signal correctly and prints `Interrupted at block N` when it stops. So the message describes a clean stop, not a fault.
 
 **Fix.** I started each run again as a transient unit of the system manager. The unit is in `system.slice`, where a logout cannot stop it:
 
@@ -112,9 +110,9 @@ All three cost time in one run.
 | --- | --- |
 | `nohup: ignoring input` | Information. Each `nohup` log starts with it |
 | `Interrupted at block N` | `badblocks` got a signal and stopped cleanly. It is never a bad disk |
-| A progress line that never appears | The buffer of stdio. When the output goes to a file, glibc changes from a line buffer to a full buffer. One drive showed nothing for 17 minutes, and it wrote faster than the other two |
+| A progress line that never appears | The buffer of stdio. One drive showed nothing for 17 minutes, and it wrote faster than the other two |
 
-One lesson repairs all three: verify from the block layer, not from the output of the program. Field 7 of `/sys/block/<dev>/stat` is the number of written sectors. SMART attribute `241 Total_LBAs_Written`, divided by the total number of sectors, gives the progress. `systemctl status` shows that the CPU time increases. A blocked stdout cannot make these wrong.
+One lesson repairs all three: verify from the block layer, not from the output of the program ([commands](../commands.md#does-that-long-job-really-do-something)).
 
 ## 2026-08-11: the burn-in passed, and SATA port 1 with it
 
@@ -126,9 +124,9 @@ SMART against the baseline of 9 August: each attribute that decides a return is 
 
 **`SATA6G_1` is cleared.** `199 UDMA_CRC_Error_Count` is zero on the drive on the degraded port, after fourteen hours of continuous I/O at full rate. `dmesg` recorded no link reset in that time. The result is narrower than "the port is good". The port is weak at link training, against the tolerances of some connectors. It is solid when a link exists with a cable that fits correctly. The diagnosis of a mechanical contact predicted this. So the rule is not "do not use port 1". The rule is "do not change the cable of port 1 without a reason". A cable with a looser shell brings the fault back.
 
-**`183 Runtime_Bad_Block` stayed at 6** on the one drive that reports it, through 38 hours of power and 4 TB written and 4 TB read. The value does not increase, so it comes from the factory and is not a defect. Without the baseline of 9 August, a `6` that I found three months later would have no explanation.
+**`183 Runtime_Bad_Block` stayed at 6** on the one drive that reports it, through 38 hours of power and 4 TB written and 4 TB read. The value does not increase, so it comes from the factory and is not a defect.
 
-**Two numbers that look bad and are not.** The normalised value of `1 Raw_Read_Error_Rate` went from 100 to 76–83 (worst 69–70), and `7 Seek_Error_Rate` went to 66. Both are combined counters of Seagate for errors and operations. The sign: attributes 1 and 195 have the same raw value on each drive, which a count of errors would not have. The thresholds are 6 and 45, so the margins are very large.
+**Two values that decreased.** The normalised value of `1 Raw_Read_Error_Rate` went from 100 to 76–83 (worst 69–70), and `7 Seek_Error_Rate` went to 66. The thresholds are 6 and 45, so the margins are very large.
 
 **The SMART long tests also passed.** They ended at 18:13 with `Extended offline · Completed without error` on all three drives. `LBA_of_first_error` is empty, so no sector was unreadable. The column `Remaining` shows `00%` on a completed test. That looks like a failure, but it means that zero percent is left. `LifeTime(hours) 47` agrees with the run: 40 hours after `badblocks`, plus the test of approximately 7 hours.
 
@@ -148,18 +146,15 @@ SMART against the baseline of 9 August: each attribute that decides a return is 
 
 ## 2026-08-12: the copy from Windows
 
-I copied approximately 1 TB from the Windows workstation to the NAS, through a temporary SMB share, before the workstation moved to Linux. An SMB share can be on a Generic dataset, because Samba handles the lookups that ignore case. So a temporary SMB dataset was not necessary.
+I copied approximately 1 TB from the Windows workstation to the NAS, through a temporary SMB share, before the workstation moved to Linux. An SMB share can be on a Generic dataset, because Samba handles the lookups that ignore case ([storage.md](../docs/storage.md)).
 
 | Item | Value |
 | --- | --- |
 | Transferred | 2209 files in 414 directories, 1,104,361,709,981 bytes (1028.5 GiB) |
 | Time | 2:04:21 at approximately 111.5 MB/s. The gigabit link was full |
-| Failures | 0. I made two file names shorter before the copy |
+| Failures | 0. A scan before the copy found two names that were too long. I made them shorter ([procedure](../runbooks/truenas-storage.md#a-bulk-copy-from-windows)) |
 
-Two facts from this copy:
-
-- **Linux counts the limit of 255 for a file name in bytes. NTFS counts it in characters.** A CJK character uses 3 bytes, and an emoji uses 4. So a name of 118 characters can be 278 bytes, and the copy of that file fails. Copy tools record the failure and continue, so files are missing with no clear sign. Find the long names before the copy.
-- **A transfer that stays near 11 MB/s is a 100 Mb/s link.** That was the first attempt here.
+**A transfer that stays near 11 MB/s is a 100 Mb/s link.** That was the first attempt here. The orange link LED of the switch showed which link it was. A different cable gave the full rate.
 
 ## 2026-08-26: the migration, and two things that were not what they looked like
 
@@ -169,9 +164,7 @@ This was the move of the workstation from Windows to Linux. I moved the data off
 
 **Symptom.** I selected the 1.8 TB games drive in KDE Partition Manager, selected btrfs and clicked OK. After that, the drive mounted again and showed each file as before.
 
-**Assumption.** The format ran and failed with no message. Or, worse, it ran on the wrong target.
-
-**Cause.** Neither. The format never started. Two independent locks stopped it. KDE Partition Manager puts operations in a queue and writes nothing until you click Apply. It also refuses to change a file system that is mounted, and that drive was mounted. `lsblk` confirmed it: still `ntfs`, with the same label and the same UUID. The two other drives were the same.
+**Cause.** The format never started. Two independent locks stopped it. KDE Partition Manager puts operations in a queue and writes nothing until you click Apply. It also refuses to change a file system that is mounted, and that drive was mounted. `lsblk` confirmed it: still `ntfs`, with the same label and the same UUID. The two other drives were the same.
 
 **Fix.** Unmount first, then click Apply. Nothing was lost, because nothing had happened.
 
@@ -181,13 +174,9 @@ This was the move of the workstation from Windows to Linux. I moved the data off
 
 **Symptom.** A copy of a large `AppData` tree from the NAS through `smb://` in Dolphin was very slow: hours for tens of GB, on a gigabit LAN.
 
-**Assumption.** The network, or a NAS under load.
-
-**Cause.** The protocol layer. `smb://` in Dolphin is a KIO worker, not a mounted file system. It keeps directory listings in a cache and makes some round trips for each file. On a tree of hundreds of thousands of small files, the latency decides everything, and the bandwidth is not important. The old listings also caused "file does not exist" errors during bulk deletes: the files were already gone, but the cached listing still showed them.
-
 **Fix.** rsync through SSH. I measured 927 Mb/s on a 1000 Mb/s link, so the transfer was never the limit. A CIFS mount of the kernel is the middle option if SMB is necessary. Do not use `smb://` for bulk work.
 
-**Next time.** When a transfer is slow, measure the link before you adjust anything. Four seconds of `/proc/net/dev` showed the difference between "the network is slow" and "the protocol is wrong".
+**Next time.** When a transfer is slow, measure the link before you adjust anything.
 
 ## Measured
 
