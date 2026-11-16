@@ -37,11 +37,11 @@ A board that was dead on arrival would show only after the full assembly, and th
 
 ## 2026-08-09: from the first power-on to the burn-in
 
-The first POST answered the question of the skipped bench test: the used board was not dead on arrival. I flashed the BIOS, configured it, proved it through a full cycle without mains power, and installed TrueNAS Scale. There were two real problems and one near miss.
+I flashed the BIOS, configured it, proved it through a full cycle without mains power, and installed TrueNAS Scale. There were two real problems and one near miss.
 
 ### The board still had its firmware of 2013
 
-The used B85M-G reported BIOS 0703, of 2013-10-30. The owner before me never updated it in thirteen years.
+The used B85M-G reported BIOS 0703, of 2013-10-30.
 
 I flashed 3602 (2018-03-23), the last release of ASUS for this board.
 
@@ -80,7 +80,7 @@ The fault depends on the cable because port 1 is degraded, not dead. The probabl
 
 **Cause.** `nohup: ignoring input` is only information. `nohup` prints it each time that stdin is a terminal. The first process had run correctly for one minute. The second start made a second `badblocks` in write mode on the same device.
 
-**Why it was important.** `badblocks -w` writes its pattern on the full disk. Then it reads the disk and expects to find the pattern. Two runs at the same time write over each other, so the run that survives reads the data of the other run. It reports almost each block as bad. This happened on `sdb`, the drive on `SATA6G_1`. A false failure there would have looked like a confirmation of the port fault.
+**Why it was important.** `badblocks -w` writes its pattern on the full disk, then reads the disk and compares. Two runs at the same time write over each other, so the run that survives reports almost each block as bad. This happened on `sdb`, the drive on `SATA6G_1`. A false failure there would have looked like a confirmation of the port fault.
 
 **Fix.** I stopped both processes, not one. The disk already had patterns from both runs, so the result of the survivor had no value. I started one run again from block 0.
 
@@ -90,7 +90,7 @@ The fault depends on the cable because port 1 is degraded, not dead. The probabl
 
 **Assumption.** A disk fault or an I/O error stopped the run. `Interrupted at block N` looks the same as such a fault.
 
-**Cause.** The end of the session. I had started the runs with `nohup`, on advice. `nohup` only makes a process ignore SIGHUP. A logout on a machine with systemd stops the cgroup of the login session with SIGTERM, which `nohup` does not stop. `sudo -i` did not help, because it stays in the same session. `badblocks` handles the signal correctly and prints `Interrupted at block N` when it stops. So the message describes a clean stop, not a fault.
+**Cause.** The end of the session. I had started the runs with `nohup`, on advice. `nohup` only makes a process ignore SIGHUP. A logout on a machine with systemd stops the cgroup of the login session with SIGTERM, which `nohup` does not stop. `sudo -i` did not help, because it stays in the same session. `badblocks` handles the signal correctly and prints `Interrupted at block N` when it stops.
 
 **Fix.** I started each run again as a transient unit of the system manager. The unit is in `system.slice`, where a logout cannot stop it:
 
@@ -118,17 +118,19 @@ One lesson repairs all three: verify from the block layer, not from the output o
 
 The burn-in was the last gate of phase 1 before the pool. Both halves ran: the destructive write, read and compare of the full surface, and the SMART long test of each drive.
 
-`badblocks -wsv -b 4096 -t random` completed on all three drives: `Pass completed, 0 bad blocks found. (0/0/0 errors)`. That is a full destructive write and a full read and compare of 4 TB for each drive, in approximately 14 hours.
+`badblocks -wsv -b 4096 -t random` completed on all three drives in approximately 14 hours: `Pass completed, 0 bad blocks found. (0/0/0 errors)`.
 
 SMART against the baseline of 9 August: each attribute that decides a return is still zero on all three drives (5, 197, 198, 187 and 188). No drive had to go back.
 
-**`SATA6G_1` is cleared.** `199 UDMA_CRC_Error_Count` is zero on the drive on the degraded port, after fourteen hours of continuous I/O at full rate. `dmesg` recorded no link reset in that time. The result is narrower than "the port is good". The port is weak at link training, against the tolerances of some connectors. It is solid when a link exists with a cable that fits correctly. The diagnosis of a mechanical contact predicted this. So the rule is not "do not use port 1". The rule is "do not change the cable of port 1 without a reason". A cable with a looser shell brings the fault back.
+**`SATA6G_1` is cleared.** `199 UDMA_CRC_Error_Count` is zero on the drive on the degraded port, after fourteen hours of continuous I/O at full rate. `dmesg` recorded no link reset in that time.
+
+The result is narrower than "the port is good". The port is weak at link training, against the tolerances of some connectors. It is solid when a link exists with a cable that fits correctly. So the rule is "do not change the cable of port 1 without a reason", not "do not use port 1". A cable with a looser shell brings the fault back.
 
 **`183 Runtime_Bad_Block` stayed at 6** on the one drive that reports it, through 38 hours of power and 4 TB written and 4 TB read. The value does not increase, so it comes from the factory and is not a defect.
 
 **Two values that decreased.** The normalised value of `1 Raw_Read_Error_Rate` went from 100 to 76–83 (worst 69–70), and `7 Seek_Error_Rate` went to 66. The thresholds are 6 and 45, so the margins are very large.
 
-**The SMART long tests also passed.** They ended at 18:13 with `Extended offline · Completed without error` on all three drives. `LBA_of_first_error` is empty, so no sector was unreadable. The column `Remaining` shows `00%` on a completed test. That looks like a failure, but it means that zero percent is left. `LifeTime(hours) 47` agrees with the run: 40 hours after `badblocks`, plus the test of approximately 7 hours.
+**The SMART long tests also passed.** They ended at 18:13 with `Extended offline · Completed without error` on all three drives. `LBA_of_first_error` is empty, so no sector was unreadable. `Remaining 00%` on a completed test means that nothing is left, not a failure. `LifeTime(hours) 47` agrees with the run: 40 hours after `badblocks`, plus the test of approximately 7 hours.
 
 **The counters agree with the logs.** `242 Total_LBAs_Read` was approximately 7,814,098,521, and the drive has 7,814,037,168 sectors. So the read pass really read each sector. `241 Total_LBAs_Written` is approximately 76 million sectors (approximately 39 GB) above one full drive. That is almost exactly the 0.97% that the first run reached before the logout stopped it.
 
@@ -174,7 +176,7 @@ This was the move of the workstation from Windows to Linux. I moved the data off
 
 **Symptom.** A copy of a large `AppData` tree from the NAS through `smb://` in Dolphin was very slow: hours for tens of GB, on a gigabit LAN.
 
-**Fix.** rsync through SSH. I measured 927 Mb/s on a 1000 Mb/s link, so the transfer was never the limit. A CIFS mount of the kernel is the middle option if SMB is necessary. Do not use `smb://` for bulk work.
+**Fix.** rsync through SSH. I measured 927 Mb/s on a 1000 Mb/s link, so the link was never the limit. A CIFS mount of the kernel is the middle option if SMB is necessary. Do not use `smb://` for bulk work.
 
 **Next time.** When a transfer is slow, measure the link before you adjust anything.
 
@@ -201,4 +203,4 @@ This was the move of the workstation from Windows to Linux. I moved the data off
 
 The plan expected a possible thermal problem in this case. Under the heaviest continuous load that the build will have, there is none: the margin is eight degrees.
 
-The first estimate of approximately 12 hours for this run was wrong. It came from the first minutes, when the heads are on the outer tracks at approximately 190 MB/s. The sequential rate decreases toward the spindle, so the average of the full disk is near 157 MB/s. Estimate a pass of the full surface from approximately 150 MB/s, not from the rate at the start.
+The first estimate of approximately 12 hours for the `badblocks` run was wrong. It came from the first minutes, when the heads are on the outer tracks at approximately 190 MB/s. The sequential rate decreases toward the spindle, so the average of the full disk is near 157 MB/s. Estimate a pass of the full surface from approximately 150 MB/s, not from the rate at the start.
