@@ -10,11 +10,11 @@ This work took two evenings.
 
 **Symptom.** After I set the apps pool, the only dataset that looked new was `NAS_Storage/apps`.
 
-**Assumption.** I forgot the `apps` dataset that I made on 12 August, and took it for the runtime dataset.
+**Assumption.** I forgot `apps`, my own dataset for the configuration from 12 August, and took it for the runtime dataset.
 
-**Cause.** `apps` is my own dataset for the configuration. The runtime is `NAS_Storage/ix-apps`. It is mounted at the hidden path `/mnt/.ix-apps`, so the Datasets page of the web UI does not show it. `zfs list -r NAS_Storage` showed it.
+**Cause.** The runtime dataset is `NAS_Storage/ix-apps`. It is mounted at the hidden path `/mnt/.ix-apps`, so the Datasets page of the web UI does not show it.
 
-**Fix.** `zfs list` found the confusion before any change to the snapshot tasks. [services.md](../docs/services.md) now gives the difference.
+**Fix.** `zfs list -r NAS_Storage` showed it, before any change to the snapshot tasks. [services.md](../docs/services.md) now gives the difference.
 
 ### Caddy in stages, with a gap in the stages
 
@@ -34,7 +34,7 @@ The gap: stage 1 tested only port 80, and stage 2 depended on port 443.
 
 **Second diagnosis, not complete.** A client asked for the name before the record existed. The stub resolver kept NXDOMAIN in its cache until it expired in the night. That explains one failure, not a failure that comes back. After `resolvectl flush-caches`, the name still failed.
 
-**Cause.** `nslookup` sends two queries. The `A` query came back `NOERROR` with the `aa` flag: Pi-hole answered from its record. The `AAAA` query came back NXDOMAIN without `aa`: Pi-hole forwarded it to the public zone, which does not know the name. NXDOMAIN means that the name does not exist, so it also denied the `A` record that worked. It had a negative TTL of 1800 seconds, and the local `A` record had a TTL of 0.
+**Cause.** `nslookup` sends two queries. The `A` query came back `NOERROR` with the `aa` flag: Pi-hole answered from its record. The `AAAA` query came back NXDOMAIN without `aa`: Pi-hole forwarded it to the public zone, which does not know the name. NXDOMAIN means that the name does not exist, so it also denied the `A` record that worked. The NXDOMAIN had a negative TTL of 1800 seconds, and the local `A` record had a TTL of 0.
 
 **Fix.** An `AAAA` record for each internal name ([network.md](../docs/network.md)).
 
@@ -126,11 +126,11 @@ I deployed Forgejo from the catalogue of TrueNAS, with its own Postgres. There w
 
 **Assumption.** Another location on the server had no access.
 
-**Cause.** The same folder. `/var/lib/gitea` in the container is the host path of the data. *Enable ACL* was on, with no entry under it. The checkbox alone gives nothing.
+**Cause.** The same folder. The container mounts the host path of the data at `/var/lib/gitea`. *Enable ACL* was on, with no entry under it. The checkbox alone gives nothing.
 
 **Fix.** An ACL entry: USER `568`, Modify. The [Jellyfin runbook](../runbooks/jellyfin.md) already had this entry.
 
-**Next time.** The entry gives the access, not the checkbox. When an error names a path in the container, find its host path first.
+**Next time.** When an error names a path in the container, find its host path first.
 
 ### A second URL for the remote
 
@@ -158,6 +158,7 @@ I examined the configuration before the first deployment. Two fields were wrong:
 - **Allowed Hosts.** I entered the addresses of the NAS and the Pi, because I read the field as a list of permitted clients. It is the list of names that Homepage answers to.
 
 **Fix.** Before the deployment: the socket off, and the `donny.lu` name in *Allowed Hosts*.
+
 ### The key of the TrueNAS widget
 
 **Symptom.** The widget showed `TrueNAS authentication failed`.
