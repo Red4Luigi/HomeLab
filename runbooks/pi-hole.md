@@ -75,6 +75,7 @@ Conditional forwarding sends local names and reverse lookups of the LAN to the r
 
 - Add the row with the `+` button of the table before you save. If not, *Save & Apply* does nothing, and `FTL.log` says `No config changes detected`. A real save records `Wrote config file` and `Restarting FTL`.
 - The local domain of the router is under a real public TLD. Without conditional forwarding, the name resolves to the server of a stranger ([build log of phase 3](../build-log/phase-3.md)).
+- The host names of the devices never leave the network. The suffix is added locally when the router answers the reverse lookup.
 
 `forwarded` in the log means "sent to an upstream". The destination is the important part. To confirm that no local name goes upstream:
 
