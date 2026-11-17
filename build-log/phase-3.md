@@ -44,7 +44,7 @@ The reader did not read any card. It survived a reboot. Then it failed during th
 
 **Symptom.** Pi-hole answered the name of the router correctly. One PC still went to the public host.
 
-**Assumption.** First HSTS, but a test in a private window excluded it. Then two other theories: a WPAD proxy configuration from the time when the domain pointed to the public host, and DoH in Firefox. All three were wrong. DoH was clearly off.
+**Assumption.** First HSTS, but a test in a private window excluded it. Then two other theories: a WPAD proxy configuration from the time when the domain pointed to the public host, and DoH in Firefox. The two other theories were wrong, and DoH was clearly off. HSTS was a real fault, but the test missed it.
 
 **Cause.** Two independent leftovers on the client. Both survived the fix on the server.
 
