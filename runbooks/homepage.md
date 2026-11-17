@@ -27,12 +27,12 @@ The placeholders `<NAS_IPV4>` and `<PI_IPV4>` are the fixed IPv4 addresses of th
 | Resources | The defaults: 2 CPUs and 4 GiB |
 
 - **Allowed Hosts** is the list of names that Homepage answers to. It examines the `Host` header, as a protection against DNS rebinding. It is not a list of permitted clients. `http://<NAS_IPV4>:30054` gets `400 Host validation failed`. A new name, for example a tailnet name, must be in this list before it works.
-- **Keep *Mount Docker Socket* off.** A read-only mount protects the socket file, not the API behind it. Each process that can talk to the socket can start a container with `/` mounted. That is root on the NAS, from a page with no login. The socket would give the status of the containers, statistics for each container and discovery by labels. The page uses none of them.
+- Keep *Mount Docker Socket* off. A read-only mount protects the socket file, not the API behind it. Each process that can talk to the socket can start a container with `/` mounted. That is root on the NAS, from a page with no login. The socket would give the status of the containers, statistics for each container and discovery by labels. The page uses none of them.
 
 ## Widgets
 
 The page has widgets for TrueNAS, Pi-hole and Jellyfin. They call their services by the `donny.lu` name. So they depend on Caddy and on the local records of Pi-hole, and also on the service. The widget of Pi-hole is the exception: it calls `http://<PI_IPV4>`.
 
-- **The URL of the TrueNAS widget is `https://truenas.donny.lu`, never `http://<NAS_IPV4>`.** TrueNAS revokes the key of a user the first time that it arrives over plain HTTP, and it judges the connection that it receives. So the name is safe only because the upstream of Caddy for TrueNAS is also HTTPS ([Caddy runbook](caddy.md), "Caddyfile"). The key is the key of the dedicated read-only user, not of the admin account ([TrueNAS runbook](truenas.md), "API keys").
-- **Pi-hole v6 has no read-only credential.** The key of the widget is an app password (*Settings → Web interface / API*), which can do everything that the admin password can do. It goes to `http://<PI_IPV4>`, so it crosses the LAN in clear text. To serve the admin page of Pi-hole over HTTPS is planned.
-- **`url` and `href` need the scheme.** Without `https://`, the widget fails with *API Error: Unexpected error*, and the link resolves as a path on `homepage.donny.lu`.
+- The URL of the TrueNAS widget is `https://truenas.donny.lu`, never `http://<NAS_IPV4>`. TrueNAS revokes the key of a user the first time that it arrives over plain HTTP, and it judges the connection that it receives. So the name is safe only because the upstream of Caddy for TrueNAS is also HTTPS ([Caddy runbook](caddy.md), "Caddyfile"). The key is the key of the dedicated read-only user, not of the admin account ([TrueNAS runbook](truenas.md), "API keys").
+- Pi-hole v6 has no read-only credential. The key of the widget is an app password (*Settings → Web interface / API*), which can do everything that the admin password can do. It goes to `http://<PI_IPV4>`, so it crosses the LAN in clear text. To serve the admin page of Pi-hole over HTTPS is planned.
+- `url` and `href` need the scheme. Without `https://`, the widget fails with *API Error: Unexpected error*, and the link resolves as a path on `homepage.donny.lu`.

@@ -10,12 +10,12 @@ Never put the Cloudflare API token in a file that git tracks, or in the YAML of 
 
 Caddy is a TrueNAS Custom App ([services.md](../docs/services.md)). The image is `ghcr.io/caddybuilds/caddy-cloudflare`: Caddy with the module `caddy-dns/cloudflare` built in.
 
-The official image has no DNS modules. A Custom App pulls an image and cannot build one. So an image that is already built is the only option. With the stock image, the failure looks like an error in the ACME configuration.
+The official image has no DNS modules. A Custom App pulls an image and cannot build one. So an image that is already built is the only option.
 
 ## Prerequisites
 
-- **Move the web UI of TrueNAS off ports `80` and `443` first.** In *System Settings → General → GUI*, set `8080` and `8443`. Make sure that SSH works before you change it.
-- **A Cloudflare API token** for the zone `donny.lu`, with `Zone:DNS:Edit` and `Zone:Read`. The template *Edit zone DNS* has both. A token that a person made by hand, without `Zone:Read`, fails as an authentication error.
+- Move the web UI of TrueNAS off ports `80` and `443` first. In *System Settings → General → GUI*, set `8080` and `8443`. Make sure that SSH works before you change it.
+- A Cloudflare API token for the zone `donny.lu`, with `Zone:DNS:Edit` and `Zone:Read`. The template *Edit zone DNS* has both. A token that a person made by hand, without `Zone:Read`, fails as an authentication error.
 
 ## Deployment
 
@@ -70,10 +70,10 @@ jellyfin.donny.lu {
 
 The live file has one block for each service. It is on `apps`, so it is in the backup.
 
-- **The upstreams are plain HTTP, but not for TrueNAS.** TLS ends at Caddy. A new encryption to a backend with a self-signed certificate needs verification off, and it gives nothing on a hop that never leaves the NAS.
-- **TrueNAS is the exception.** TrueNAS revokes an API key that arrives over plain HTTP, and it judges the connection that it receives, which is the connection of Caddy. So its block goes to the HTTPS port `8443` and skips the verification ([TrueNAS runbook](truenas.md), "API keys").
-- **The TrueNAS block also needs `header_up Host {host}`.** To an HTTPS upstream, Caddy sends the address of the upstream as `Host`. TrueNAS makes its redirect from `/` to `/ui/` from that value, and it would send the browser to the IP address and the port.
-- **An upstream is `<NAS_IPV4>:<published-port>`,** never `localhost` or a container name. Each app has its own network, and `localhost` in Caddy is Caddy.
+- The upstreams are plain HTTP, except TrueNAS. TLS ends at Caddy.
+- TrueNAS revokes an API key that arrives over plain HTTP, and it judges the connection that it receives, which is the connection of Caddy. So its block goes to the HTTPS port `8443` and skips the verification ([TrueNAS runbook](truenas.md), "API keys").
+- The TrueNAS block also needs `header_up Host {host}`. To an HTTPS upstream, Caddy sends the address of the upstream as `Host`. TrueNAS makes its redirect from `/` to `/ui/` from that value, and it would send the browser to the IP address and the port.
+- An upstream is `<NAS_IPV4>:<published-port>`, never `localhost` or a container name. Each app has its own network, and `localhost` in Caddy is Caddy.
 
 ## How to add a service
 
@@ -96,6 +96,6 @@ The live file has one block for each service. It is on `apps`, so it is in the b
 ## Notes
 
 - DNS-01 writes a temporary TXT record, and Caddy deletes it after the certificate is issued. No permanent public record exists for an internal name. Open ports have no effect on the issue of a certificate.
-- Each site has its own certificate. So each internal host name is in the public Certificate Transparency logs. The names are not secret. They are only not reachable.
+- Each site has its own certificate. So each internal host name is in the public Certificate Transparency logs, but the names are not reachable from the internet.
 - A service behind the proxy can need its public name as a setting, for example *Published Server URL* in Jellyfin.
 - The public sites will use Cloudflare Tunnel, which is a separate path. Jellyfin stays off that path ([network.md](../docs/network.md)).

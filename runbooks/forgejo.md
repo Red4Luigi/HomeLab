@@ -14,7 +14,7 @@ Forgejo is self-hosted git on the NAS, behind [Caddy](caddy.md) at `forgejo.donn
 | Forgejo Data | Host Path | `NAS_Storage/apps/forgejo/data` | ACL: USER `568`, Modify | `/var/lib/gitea` |
 | Forgejo Postgres Data | Host Path | `NAS_Storage/apps/forgejo/postgres` | Owner `999:999` | The data directory of Postgres |
 
-- **The default of both entries is ixVolume, and the second entry is lower on the form.** An ixVolume has no snapshots and no replication. If you miss the database, a restore gives repositories with no users, no keys and no issues.
+- The default of both entries is ixVolume, and the second entry is lower on the form. An ixVolume has no snapshots and no replication. If you miss the database, a restore gives repositories with no users, no keys and no issues.
 - These two paths are the full state. On 16.x, `app.ini` (with the generated secrets) is at `/var/lib/gitea/custom/conf/app.ini`, in Data.
 - Both paths are in one dataset, so one snapshot holds the repositories and the database together. This is data, not configuration ([backup.md](../docs/backup.md)).
 
@@ -23,8 +23,8 @@ Forgejo is self-hosted git on the NAS, behind [Caddy](caddy.md) at `forgejo.donn
 Both folders were made by hand as `root:root 755`.
 
 - **Data.** Forgejo runs as `568:568` and cannot write. The result is a restart loop with `mkdir: can't create directory '/var/lib/gitea/git': Permission denied`. Select **Enable ACL**, and add the entry USER `568`, Modify. The checkbox alone gives no permission.
-- **An app update fails with `path contains existing data and force was not specified`.** Select *Force Flag* on the ACL of the Data path.
-- **Postgres.** It runs as `999:999`, and it does not start unless it owns its directory. Here, `chown 999:999` before the first deployment did that. For a new build, select *Automatic Permissions* below the Postgres entry, because the middleware knows that setting. `ls -ln` shows the numbers. `ls -l` shows the names that the NAS has for those numbers, which have no relation to Postgres.
+- An app update fails with `path contains existing data and force was not specified`. Select *Force Flag* on the ACL of the Data path.
+- **Postgres.** It runs as `999:999`, and it does not start unless it owns its directory. Here, `chown 999:999` before the first deployment did that. As an alternative for a new build, *Automatic Permissions* below the Postgres entry can set the owner. It is not tested here. `ls -ln` shows the numbers. `ls -l` shows the names that the NAS has for those numbers, which have no relation to Postgres.
 
 ## Configuration
 
