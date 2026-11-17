@@ -63,18 +63,16 @@ Each reason that Jellyfin gives for a transcode is the client, which declines so
 | --- | --- |
 | Browser | The weakest: no MKV, no HEVC and no HDR. Good for H.264 SDR |
 | Jellyfin Media Player (desktop) | In use. It is based on mpv: MKV, HEVC Main 10, HDR10, PGS and 7.1 audio all play directly |
-| Jellyfin for Android TV | The strongest. It is the only path on which HDR10 reaches an HDR panel |
-| Samsung Tizen and LG webOS | Community builds. The Samsung build needs sideloading, and a new signature at intervals |
 
 - The reasons have different costs. The container and the number of channels need a remux or a downmix, which is cheap. Bitmap subtitles (PGS or VOBSUB, burned in) and HDR to SDR each force a full new encode. Put the reasons in order before you make a theory. The [build log of phase 2](../build-log/phase-2.md) has an example.
 - Text subtitles (SRT) cost nothing. If you select one in place of an embedded PGS track, that reason goes away.
-- With direct play, the bandwidth is the limit. A stutter during Direct Play is a problem of the network or of the disk.
+- With direct play, the bandwidth is the limit. A stutter during Direct Play comes from the network, the disk or the client.
 
 ## Library settings
 
 - **Content type.** *Movies* and *Shows* find their items in TheMovieDb and TVDB.
 - **Folders.** Point each library at the deepest correct folder, because the scan is recursive.
-- **Off, because the mount is read-only:** Metadata savers → Nfo, *Save artwork into media folders*, and *Save trickplay images next to media*. The metadata is in the config, on `apps`.
+- Off, because the mount is read-only: Metadata savers → Nfo, *Save artwork into media folders*, and *Save trickplay images next to media*. The metadata is in the config, on `apps`.
 - **Trickplay and chapter images** are encode work on two cores. They are off. Turn on one at a time if you want them.
 - ***Prefer embedded titles over filenames*.** Set it for each library, never globally. Some files have an embedded `title` tag that is not the title of the episode. With the setting on, the name in the library becomes that tag. The change comes only when something scans the file again, so the damage appears later, one item at a time.
 - **Embedded metadata.** Jellyfin reads it again only when the modification time of a file changes. After a tool writes tags but keeps the mtime, run a metadata refresh, not a new scan.

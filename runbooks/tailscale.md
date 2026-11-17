@@ -19,7 +19,6 @@ Never advertise this machine as an exit node. An exit node takes the default rou
 ## Host and storage
 
 - Tailscale comes from the app catalogue of TrueNAS. Never install it on the host, where changes do not survive updates.
-- **Userspace networking must be off.** A userspace node cannot route for other machines.
 - The state is on a host path, `NAS_Storage/apps/tailscale`. It holds the identity of the node. If it is lost, the tailnet gets a new machine.
 
 ## Configuration
@@ -30,7 +29,7 @@ Never advertise this machine as an exit node. An exit node takes the default rou
 | Auth Once | On | Use the stored state again |
 | Reset | Off | It would erase the state at each start |
 | Accept DNS | Off | The NAS keeps its own resolver ([network.md](../docs/network.md)) |
-| Userspace | Off | A requirement for routing |
+| Userspace | Off | |
 | Accept Routes | Off | This node does not need the routes of other nodes |
 | Advertise Exit Node | Off | Never |
 | Advertise Routes | `<LAN_CIDR>`, `<ULA_PREFIX>` | Prefixes, not host addresses |
@@ -47,7 +46,7 @@ Forwarding must be on for IPv4 and for IPv6. Set both in *System Settings → Ad
 
 The chain is: client, tailnet DNS, then Pi-hole through the subnet route. So routing must work first. A DNS failure and a routing failure look the same.
 
-- **Set only the IPv4 nameserver.** The subnet router does source NAT for IPv4, so the queries reach Pi-hole from a LAN address. IPv6 gets no NAT. An IPv6 query arrives from a tailnet address, and dnsmasq drops it (`ignoring query from non-local network …`, recorded one time). With both nameservers configured, a client uses one or the other and fails at intervals. The alternative is a wider listening mode of Pi-hole. But an open resolver is dangerous wherever it can be reached.
+- Set only the IPv4 nameserver. The subnet router does source NAT for IPv4, so the queries reach Pi-hole from a LAN address. IPv6 gets no NAT. An IPv6 query arrives from a tailnet address, and dnsmasq drops it (`ignoring query from non-local network …`, recorded one time). With both nameservers configured, a client uses one or the other and fails at intervals.
 - The DNS settings go to a client when it connects. After a change, turn Tailscale off and on again on the client.
 
 ## Verification
