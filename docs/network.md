@@ -49,20 +49,20 @@ One container needed IPv6 off. Its documentation gives "disable IPv6 for the hos
 
 Tailscale gives personal access from outside to the web UI, the shares and Jellyfin. The NAS is a subnet router: it advertises the LAN to the tailnet ([Tailscale runbook](../runbooks/tailscale.md)).
 
-- **Subnet routing, not tailnet host names.** The `*.ts.net` names need no routing and no approval. But they give two naming schemes, one at home and one away, for each bookmark, client and runbook. Subnet routing costs more setup one time: the approval of the route, forwarding for IPv4 and IPv6, and a DNS asymmetry that the runbook describes. After that, a new service costs nothing.
-- **Never make the NAS an exit node.** An exit node takes the default route from each other outbound path. To advertise subnet routes is safe.
+- Remote clients use subnet routing. The `*.ts.net` names need no routing and no approval. But they give two naming schemes, one at home and one away, for each bookmark, client and runbook. Subnet routing costs more setup one time: the approval of the route, forwarding for IPv4 and IPv6, and a DNS asymmetry that the runbook describes. After that, a new service costs nothing.
+- Never make the NAS an exit node. An exit node takes the default route from each other outbound path. To advertise subnet routes is safe.
 - **DNS.** Pi-hole is the global nameserver in the admin console of Tailscale. Then MagicDNS does not conflict with the resolver of the host.
 
 ## Public sites: Cloudflare Tunnel
 
 This part is planned. No site is published yet.
 
-- **The public sites run on the NAS, not on the Pi.** The Pi is the only resolver of the household. A bad deploy, a traffic spike or an out-of-memory error on its 1 GB of RAM would stop DNS for everybody. Web writes would also add wear to the SD card.
-- **`cloudflared` will be the only process on the NAS that faces the internet.** A tunnel that only connects out removes the attack surface of the network, but not that of the application. So the sites get their own dataset, the container gets no other mount, and it runs as a non-root user.
-- **The tunnel goes directly to each public service, never through the Caddy of the LAN.** That Caddy holds the Cloudflare API token, and it serves the TrueNAS web UI and Forgejo. One wrong site block would publish an admin interface. That Caddy also adds nothing here: `cloudflared` routes by host name, and Cloudflare holds the public certificate. A static site still needs a web server, because `cloudflared` only forwards. That server is a second, minimal Caddy on plain HTTP, without the token.
-- **Caddy is not exposed directly.** An open port with an `AAAA` record breaks the rule of no inbound port. It publishes a home address that changes, so it needs dynamic DNS. Visitors with only IPv4 cannot reach it.
-- **A public site that needs a login gets Cloudflare Access.** Access examines the identity at the edge of Cloudflare, so a request with no login never reaches the home network. It is free for up to 50 users. Access fails open: a host name with no Access application is public, with no error. So `cloudflared` also validates the token of Access (`originRequest.access`). Then a missing policy gives a 403.
-- **Do not put Jellyfin behind Cloudflare.** The CDN terms of Cloudflare do not permit video that is hosted outside Cloudflare. Remote media goes through Tailscale.
+- The public sites will run on the NAS, not on the Pi. The Pi is the only resolver of the household. A bad deploy, a traffic spike or an out-of-memory error on its 1 GB of RAM would stop DNS for everybody. Web writes would also add wear to the SD card.
+- `cloudflared` will be the only process on the NAS that faces the internet. A tunnel that only connects out removes the attack surface of the network, but not that of the application. So the sites get their own dataset, the container gets no other mount, and it runs as a non-root user.
+- The tunnel goes directly to each public service, never through the Caddy of the LAN. That Caddy holds the Cloudflare API token, and it serves the TrueNAS web UI and Forgejo. One wrong site block would publish an admin interface. That Caddy also adds nothing here: `cloudflared` routes by host name, and Cloudflare holds the public certificate. A static site still needs a web server, because `cloudflared` only forwards. That server is a second, minimal Caddy on plain HTTP, without the token.
+- Caddy is not exposed directly. An open port with an `AAAA` record breaks the rule of no inbound port. It publishes a home address that changes, so it needs dynamic DNS. Visitors with only IPv4 cannot reach it.
+- A public site that needs a login gets Cloudflare Access. Access examines the identity at the edge of Cloudflare, so a request with no login never reaches the home network. It is free for up to 50 users. Access fails open: a host name with no Access application is public, with no error. So `cloudflared` also validates the token of Access (`originRequest.access`). Then a missing policy gives a 403.
+- Do not put Jellyfin behind Cloudflare. The CDN terms of Cloudflare do not permit video that is hosted outside Cloudflare. Remote media goes through Tailscale.
 
 ## Separation from the household network
 

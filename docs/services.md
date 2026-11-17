@@ -4,9 +4,9 @@ This file describes where each service runs and how the services are deployed, w
 
 ## The NAS
 
-- **The OS is TrueNAS Scale.** It is free, and ZFS is native to it.
+- The OS is TrueNAS Scale. It is free, and ZFS is native to it.
 - **Accounts.** The NAS has one human user, and service accounts that are separate from the admin account ([security.md](security.md)). Examine the permission design again if a second person stores data here.
-- **Media runs on the NAS, not on the Pi.** The Pi 3 cannot transcode, and no configuration changes that. So Jellyfin runs on the x86 NAS, and the Pi does only light work that is always on.
+- Media runs on the NAS, not on the Pi. The Pi 3 cannot transcode, and no configuration changes that. So Jellyfin runs on the x86 NAS, and the Pi does only light work that is always on.
 
 ## The limits of the i3-4130
 
@@ -15,7 +15,7 @@ This file describes where each service runs and how the services are deployed, w
 
 ### Playback is repaired at the client, not in the library
 
-Each reason that Jellyfin gives for a transcode is the client, which declines something: the container, the codec, the channels or HDR. A browser declines the most. A client that is based on mpv, or an Android TV client, plays the same file directly. The clients are in the [Jellyfin runbook](../runbooks/jellyfin.md), and the event is in the [build log of phase 2](../build-log/phase-2.md).
+Each reason that Jellyfin gives for a transcode is the client, which declines something: the container, the codec, the channels or HDR. A browser declines the most. A client that is based on mpv plays the same file directly. The clients are in the [Jellyfin runbook](../runbooks/jellyfin.md), and the event is in the [build log of phase 2](../build-log/phase-2.md).
 
 This also limits what Quick Sync in the Jellyfin container can give. It does not help with HEVC decode, with tone-mapping or with burned-in subtitles.
 
@@ -29,11 +29,11 @@ Containers run as TrueNAS *Custom Apps*, not with `docker compose` over SSH.
 
 The rules for each app:
 
-- **The state goes on host paths** in `NAS_Storage/apps/<service>`, never in Docker volumes.
-- **`apps` and `ix-apps` are opposite cases.** `apps` is the dataset of the homelab: it has snapshots, and it is in the backup set. `ix-apps` is the runtime of TrueNAS (`docker`, `app_configs`, `app_mounts` and `truenas_catalog`), and it is excluded from both snapshot tiers. It is mounted hidden at `/mnt/.ix-apps`, and the Datasets page does not show it. `zfs list -r NAS_Storage` shows both.
-- **One app for each network boundary.** Each Custom App is its own compose project with its own network. Inside an app, the services reach each other by name. Between apps, they use `<NAS_IPV4>:<published-port>`. So services that must reach each other by name are one app. Caddy and Jellyfin are each their own app.
-- **A published port binds to `0.0.0.0`.** That includes the tailnet. Do not disable the authentication of a web UI for local addresses.
-- **Keep the container ports at their defaults.** If the container port and the published port do not agree, the connection hangs and gives no error.
+- The state goes on host paths in `NAS_Storage/apps/<service>`, never in Docker volumes.
+- `apps` and `ix-apps` are opposite cases. `apps` is the dataset of the homelab: it has snapshots, and it is in the backup set. `ix-apps` is the runtime of TrueNAS (`docker`, `app_configs`, `app_mounts` and `truenas_catalog`), and it is excluded from both snapshot tiers. It is mounted hidden at `/mnt/.ix-apps`, and the Datasets page does not show it. `zfs list -r NAS_Storage` shows both.
+- Each Custom App is its own compose project with its own network. Inside an app, the services reach each other by name. Between apps, they use `<NAS_IPV4>:<published-port>`. So services that must reach each other by name are one app. Caddy and Jellyfin are each their own app.
+- A published port binds to `0.0.0.0`. That includes the tailnet. Do not disable the authentication of a web UI for local addresses.
+- Keep the container ports at their defaults. If the container port and the published port do not agree, the connection hangs and gives no error.
 
 ### Why there is no shared Docker network
 
@@ -50,10 +50,10 @@ Two other shapes were rejected:
 
 Pi-hole runs on the Raspberry Pi, not as a VM on TrueNAS. The DNS of the household must not depend on the machine that is busiest and that reboots most. The plan puts the Pi on the UPS ([power.md](power.md)).
 
-- **One resolver is a single point of failure, and a plain second resolver is the wrong fix.** Clients divide their queries between all the resolvers that they get. So a second resolver without a filter makes the blocking fail at intervals, and it is not a fallback. The fix is a second Pi-hole, which is planned. Until then, the gap is accepted.
-- **The OS is Raspberry Pi OS Lite, 64-bit,** installed with Raspberry Pi Imager.
-- **The address is fixed with a DHCP reservation on the router,** not with a static configuration on the Pi. Then there is one place to look, and the address survives a new flash of the card.
-- **The wear of the SD card is the long-term risk of the Pi.** Pi-hole writes each query to a database on the card, and the swap is also there. These are the possible changes, cheapest first:
+- One resolver is a single point of failure, and a plain second resolver is the wrong fix. Clients divide their queries between all the resolvers that they get. So a second resolver without a filter makes the blocking fail at intervals, and it is not a fallback. The fix is a second Pi-hole, which is planned. Until then, the gap is accepted.
+- The OS is Raspberry Pi OS Lite, 64-bit, installed with Raspberry Pi Imager.
+- The address is fixed with a DHCP reservation on the router, not with a static configuration on the Pi.
+- The wear of the SD card is the long-term risk of the Pi. Pi-hole writes each query to a database on the card, and the swap is also there. These are the possible changes, cheapest first:
   1. A shorter retention of the queries (`database.maxDBdays` in Pi-hole v6)
   2. USB boot, which is on by default on the 3B+
   3. A high-endurance card at the next flash
@@ -70,8 +70,8 @@ The repositories of Forgejo are data, not configuration, so they are in the back
 
 TrueNAS sends its alerts through Telegram.
 
-- **Telegram, not e-mail.** E-mail was configured first, and it never delivered. Telegram is examined more often. Gmail needs an App Password (which needs 2FA) or OAuth. That is a secret that can break with no warning on a headless machine.
-- **An external relay, not a self-hosted transport.** A notifier on the NAS cannot report that the NAS is down. On the Pi, it would depend on the SD card.
-- **The privacy cost is accepted.** The alert texts send a drive serial, the host name and the pool name to one company, over TLS.
+- E-mail was configured first, and it never delivered. Telegram is examined more often. Gmail needs an App Password (which needs 2FA) or OAuth. That is a secret that can break with no warning on a headless machine.
+- The relay is external. A notifier on the NAS cannot report that the NAS is down. On the Pi, it would depend on the SD card.
+- The privacy cost is accepted. The alert texts send a drive serial, the host name and the pool name to one company, over TLS.
 
 A monitor for the health of the services is planned. Its transport for the alerts is not decided.

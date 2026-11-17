@@ -6,8 +6,8 @@ This file describes how the homelab is protected, and the risks that are accepte
 
 No inbound port is open, and none is necessary. Each path starts a connection from the inside:
 
-- Cloudflare Tunnel, for the public sites
 - Tailscale, for personal access to the web UI, the shares and Jellyfin
+- Cloudflare Tunnel, for the public sites (planned)
 
 There is no port forward, no DMZ and no dynamic DNS. So the router is never part of the threat model.
 

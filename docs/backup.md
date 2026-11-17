@@ -45,9 +45,9 @@ The rule for each migration: copy the data, verify it by file count and by bytes
 
 The snapshot tiers were decided together with the dataset layout.
 
-- **The cost follows the churn, not the size.** A snapshot holds only the blocks that change or are deleted later. Deleted blocks stay allocated until each snapshot that holds them expires.
-- **`media` is on the daily tier only.** This limits that delay to 2 weeks, where the weekly tier gives 3 months. The daily tier still gives a rollback if a tool renames the full library by mistake.
-- **A bulk rewrite costs double until the snapshots expire.** A new tag, a remux or a new encode writes new blocks, and the snapshots keep the old blocks. A rewrite of 1 TB uses approximately 2 TB for up to three months.
+- The cost follows the churn, not the size. A snapshot holds only the blocks that change or are deleted later. Deleted blocks stay allocated until each snapshot that holds them expires.
+- `media` is on the daily tier only. This limits that delay to 2 weeks, where the weekly tier gives 3 months. The daily tier still gives a rollback if a tool renames the full library by mistake.
+- A bulk rewrite costs double until the snapshots expire. A new tag, a remux or a new encode writes new blocks, and the snapshots keep the old blocks. A rewrite of 1 TB uses approximately 2 TB for up to three months.
 
 ## Test the backup
 

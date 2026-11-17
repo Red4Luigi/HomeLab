@@ -13,7 +13,6 @@ The usable capacity is 7.28 TiB before the overhead of ZFS (slop space and metad
 The first plan was two 4 TB drives in a mirror, with 4 TB usable. RAIDZ1 with three drives won for these reasons:
 
 - One more drive (approximately €190) doubles the usable capacity. With mirrors, 8 TB needs two 8 TB drives later (approximately €400 or more).
-- The workload is large sequential media, which is the case for RAIDZ1. Mirrors are better at random IOPS, and nothing here needs that.
 - ZFS cannot convert a mirror to RAIDZ1, or RAIDZ1 to a mirror. The only way is to destroy the pool and restore the data. So the layout had to be correct before the data arrived.
 
 A resilver of RAIDZ1 reads each remaining drive in full. That is why the external backup is a requirement ([backup.md](backup.md)).
@@ -46,5 +45,5 @@ The layout was decided before the pool held any data. The boundaries of the data
 
 The preset sets two properties. `acltype` can change later. `casesensitivity` can never change. So one question decides the preset: will a client that ignores the case of letters (Windows or macOS) ever write to this dataset? A Generic dataset can still have an SMB share.
 
-- **`personal` is SMB.** Windows wrote to it during the migration. The Windows laptop or the MacBook can write to it again.
-- **`media`, `apps` and `home` are Generic.** Only Linux writes to them. POSIX ACLs are also correct for containers.
+- `personal` is SMB. Windows wrote to it during the migration. The Windows laptop or the MacBook can write to it again.
+- `media`, `apps` and `home` are Generic. Only Linux writes to them. POSIX ACLs are also correct for containers.

@@ -29,14 +29,14 @@ Test a port that you do not trust during the burn-in, while the drive is empty. 
 
 Have a USB stick of 8 GB or more for the installer, and a monitor and a keyboard.
 
-1. **Flash the BIOS of a used board from the vendor image first. Then configure it.** A flash resets each setting, and it gives a clean start on a board with an unknown history.
-2. **Set the SATA mode to AHCI.** ZFS needs direct access to the disks.
-3. **Set `Restore AC Power Loss` to `Power On`, and `Wait For 'F1' If Error` to `Disabled`.** If not, the board waits at a prompt after a power failure.
-4. **Set `Aggressive LPM` to `Disabled`.** Links that wake from idle cause false resets, which look like hardware that fails.
-5. **Keep the C-states on.** They are in *CPU Configuration → CPU Power Management*, one submenu down. Boot with UEFI.
-6. **Set Secure Boot to `OS Type = Other OS`.** See "Secure Boot" below.
-7. **Prove the CMOS cell.** See "How to prove the CMOS cell" below.
-8. **After the installation, run `efibootmgr -v`.** Delete the boot entries that are not yours.
+1. Flash the BIOS of a used board from the vendor image first. Then configure it. A flash resets each setting, and it gives a clean start on a board with an unknown history.
+2. Set the SATA mode to AHCI. ZFS needs direct access to the disks.
+3. Set `Restore AC Power Loss` to `Power On`, and `Wait For 'F1' If Error` to `Disabled`. If not, the board waits at a prompt after a power failure.
+4. Set `Aggressive LPM` to `Disabled`. Links that wake from idle cause false resets, which look like hardware that fails.
+5. Keep the C-states on. They are in *CPU Configuration → CPU Power Management*, one submenu down. Boot with UEFI.
+6. Set Secure Boot to `OS Type = Other OS`. See "Secure Boot" below.
+7. Prove the CMOS cell. See "How to prove the CMOS cell" below.
+8. After the installation, run `efibootmgr -v`. Delete the boot entries that are not yours.
 
 ### Secure Boot
 
@@ -54,10 +54,10 @@ If the board starts by itself, the setting and the battery both work.
 
 ## New drives, before a pool
 
-- **Do a burn-in of each new drive before it goes into a pool.** Run a SMART long test and, if possible, a full write and read with `badblocks`. Test the drives in parallel.
-- **Record the SMART baseline first.** `Power_On_Hours` and `Power_Cycle_Count` must be near zero. If they are not, the drive was sold before, and the return period is the time to act. A baseline also gives the later values their meaning. Attribute 183 of one drive here was 6 from the start, and it stayed 6.
-- **Return a new drive if attribute 5, 197 or 198 is not zero.** Also record 187 and 188. Read the attributes again after the tests.
-- **The burn-in is the real thermal test.** Monitor the temperatures. With case fans at a fixed speed, set the switch to high first.
+- Do a burn-in of each new drive before it goes into a pool. Run a SMART long test and, if possible, a full write and read with `badblocks`. Test the drives in parallel.
+- Record the SMART baseline first. `Power_On_Hours` and `Power_Cycle_Count` must be near zero. If they are not, the drive was sold before, and the return period is the time to act. A baseline also gives the later values their meaning. Attribute 183 of one drive here was 6 from the start, and it stayed 6.
+- Return a new drive if attribute 5, 197 or 198 is not zero. Also record 187 and 188. Read the attributes again after the tests.
+- The burn-in is the real thermal test. Monitor the temperatures. With case fans at a fixed speed, set the switch to high first.
 
 ### `badblocks`
 
@@ -77,5 +77,5 @@ These messages look like failures, but they are not:
 
 ## When a delivery arrives
 
-- **Test a UPS in the return period.** Charge it for approximately 8 hours. Connect a small load, disconnect the wall plug, and make sure that the load stays on. A phone charger proves the transfer, not the runtime. The runtime comes from the LCD of the UPS when the real load is connected.
-- **Examine cases and drives for transport damage before you install them.** A claim against the courier is easiest at that time.
+- Test a UPS in the return period. Charge it for approximately 8 hours. Connect a small load, disconnect the wall plug, and make sure that the load stays on. A phone charger proves the transfer, not the runtime. The runtime comes from the LCD of the UPS when the real load is connected.
+- Examine cases and drives for transport damage before you install them. A claim against the courier is easiest at that time.
