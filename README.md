@@ -4,7 +4,7 @@ This repository is the documentation of my homelab: a server rack at home, built
 
 The documentation records each decision with its reason, and what broke.
 
-**Status:** the build is in phase 2, media and self-hosted services. The NAS is built and stable. Internal HTTPS, the media server, remote access and self-hosted git run.
+**Status:** the build is in phase 2, media and self-hosted services. The NAS is built and stable. Internal HTTPS, the media server, remote access and self-hosted git run. The UPS is installed, and the automatic shutdown is planned.
 
 ## The hardware
 
@@ -23,21 +23,21 @@ The full inventory and the specifications are in [docs/hardware.md](docs/hardwar
 
 ## Some decisions to read
 
-- **Three 4 TB drives in RAIDZ1, not two drives in a mirror.** One more drive doubles the usable capacity, and the workload is large sequential media. See [docs/storage.md](docs/storage.md).
-- **The first board and the first PSU were both replaced.** The main power connector of the OEM board was a proprietary 14-pin connector, not ATX, and the PSU had no SATA power. The project started as a new use for an old desktop and became a new build: only the CPU cooler and two SATA cables stayed. See [docs/hardware.md](docs/hardware.md).
-- **RAID is not a backup.** The pool survives a dead drive, not a deleted file. See [docs/backup.md](docs/backup.md).
-- **No inbound port is open.** Internal services get real HTTPS certificates, and remote access and the public sites start their connections from the inside. See [docs/security.md](docs/security.md) and [docs/network.md](docs/network.md).
-- **Media runs on the NAS, not on the Pi.** A Pi 3 cannot transcode, and no change to the network repairs that. See [docs/services.md](docs/services.md).
+- The pool is three 4 TB drives in RAIDZ1. The first plan was a mirror of two drives. ZFS cannot convert a mirror to RAIDZ1 later, and the third drive doubles the usable capacity. See [docs/storage.md](docs/storage.md).
+- The project started as a new use for an old desktop. The OEM board had a proprietary 14-pin power connector, and the PSU had no SATA power, so both were replaced. Only the CPU cooler and two SATA cables stayed. See [docs/hardware.md](docs/hardware.md).
+- The pool survives a dead drive. It does not protect against a deleted file. See [docs/backup.md](docs/backup.md).
+- No inbound port is open. Remote access starts its connection from the inside, and the public sites will do the same (planned). The internal services get real HTTPS certificates. See [docs/security.md](docs/security.md) and [docs/network.md](docs/network.md).
+- Jellyfin runs on the NAS, because the Pi 3 cannot transcode. See [docs/services.md](docs/services.md).
 
 ## How the documentation is organised
 
-Each fact has one home. The files are divided by the type of information.
+The files are divided by the type of information.
 
 | Location | Contents | Example |
 | --- | --- | --- |
 | [`docs/`](docs/) | What is built now, and why. One file for each topic | "The pool is RAIDZ1 because ..." |
 | [`runbooks/`](runbooks/) | How each service is configured, sufficient to build it again | The BIOS settings of the NAS |
-| [`build-log/`](build-log/) | What happened, and when. One file for each phase | "A drive did not appear on port 1. I blamed two cables. It was the port." |
+| [`build-log/`](build-log/) | What happened, and when. One file for each phase | "A drive did not appear on SATA port 1" |
 | [commands.md](commands.md) | Commands, in groups by the question that they answer | "Which physical disk is this?" |
 | [glossary.md](glossary.md) | The terms of this documentation | "split-horizon DNS" |
 
@@ -56,10 +56,10 @@ The topic files in `docs/`:
 
 ## Related projects
 
-Each standalone project has its own repository. This repository only links to them.
+These projects will get their own repositories. This repository will link to them:
 
-- Quiz and homepage: a public web project. The repository will follow.
-- Game-server hosting: a school project on the R1304. The repository will follow.
-- Linux From Scratch: build notes. The repository will follow.
+- Quiz and homepage: a public web project.
+- Game-server hosting: a school project on the R1304.
+- Linux From Scratch: build notes.
 
 The network of the house (the VLAN design, the main switch and the access points) is a separate plan. It is not part of this repository.
