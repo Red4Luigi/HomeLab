@@ -7,7 +7,7 @@ This file describes the machines of the homelab, the parts of the NAS, the case 
 | Machine | Specification | Role | Always on |
 | --- | --- | --- | --- |
 | The NAS | i3-4130, 2 × 8 GB DDR3-1600, ASUS B85M-G, MSI MAG A850GL, 3 × IronWolf 4 TB, Intenso 128 GB boot SSD, no discrete GPU | NAS, Jellyfin, containers and public web hosting | Yes |
-| Intel R1304GL4DS9 | 1U server with two Xeons and IPMI. Loud, approximately 80 to 120 W at idle | LFS, then game-server hosting. These projects have their own repositories | No. IPMI starts it when it is necessary |
+| Intel R1304GL4DS9 | 1U server with two Xeons and IPMI. Loud, approximately 80 to 120 W at idle | LFS, then game-server hosting. These projects will get their own repositories | No. IPMI starts it when it is necessary |
 | Raspberry Pi 3 Model B+ | Cortex-A53, 1 GB of RAM. Its gigabit NIC is on a USB 2.0 bus (approximately 300 Mb/s). It cannot transcode | Pi-hole and NUT client | Yes |
 | TP-Link TL-SG108E | Switch with 8 gigabit ports. It can do VLANs. Approximately 100 mm deep | The switch of the homelab | Yes |
 | MacBook Pro | Used. The model and the year are not recorded yet. Erased | None | No |

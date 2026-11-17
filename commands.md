@@ -1,6 +1,6 @@
 # Commands
 
-This file helps to find the correct command when something goes wrong. The commands are in groups, by the question that they answer. This file has the commands. The reasons are in [`docs/`](docs/) and in the [runbooks](runbooks/).
+This file helps to find the correct command when something goes wrong. The commands are in groups, by the question that they answer. The reasons are in [`docs/`](docs/) and in the [runbooks](runbooks/).
 
 The placeholders are `/dev/sdX` for a disk, and `<NAS_IPV4>` and `<user>` for the NAS. The real values are not in this repository. "Not run yet" marks a command that was not run on this build.
 
@@ -52,7 +52,7 @@ systemctl status bb-sda
 
 - Use `-b 4096` on large drives. The default of 1024 bytes failed here with "Value too large for defined data type".
 - The command needs root. When the output goes to a file, a permission failure shows no message.
-- `-t random` is one pattern, approximately 14 hours for 4 TB. The default of four patterns takes approximately 50 hours.
+- `-t random` is one pattern, approximately 14 hours for 4 TB.
 - Use `systemd-run`, not `nohup`. A logout stops the session with SIGTERM, which `nohup` does not stop ([build checklist](docs/build-checklist.md)).
 - Never run two `badblocks -w` on one disk. Both then report each block as bad. Stop both, and start one again.
 
@@ -174,7 +174,7 @@ docker logs <container> 2>&1 | tail
 Use `ls -ln`, because the UID of a container frequently has no name on the host. Then find the class of the UID and GID of the container: owner, group or other. Then see if that class can write.
 
 - **Other** (for example a directory that was made by hand as `root:root 755`): use `chown` to the UID of the service. `chmod` cannot help.
-- **Group, but no write permission** (for example `root:media_access 2755`, made through SSH): use `chmod g+w` or `chmod 2775`. Never use `775`, which clears setgid. Then the group of new files becomes wrong with time.
+- **Group, but no write permission** (for example `root:media_access 2755`, made through SSH): use `chmod g+w` or `chmod 2775`.
 - For one writer, make that UID the owner. For more than one writer, use a shared group and setgid.
 - For a catalogue app, use the *Enable ACL* entry of the host path. The middleware does not see an owner that was set by hand. For an app from plain YAML, the CLI is the correct way.
 

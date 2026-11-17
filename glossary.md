@@ -13,7 +13,7 @@ This file explains the terms of this documentation. A term that has a decision b
 - **slop space:** the 1/32 of a pool that ZFS keeps free, so that a full pool can still be written.
 - **ACL:** the permission model of a dataset: POSIX (Linux) or NFSv4 (as on Windows). The preset of the dataset sets it.
 - **setgid** (on a directory): new files get the group of the directory. That is why shared trees have the mode `2775`.
-- **CMR and SMR:** recording types of hard drives. SMR breaks the rebuilds of ZFS, so the pool uses only CMR.
+- **CMR and SMR:** recording types of hard drives. The pool uses CMR drives.
 - **SMART:** the self-monitoring of a drive. Attributes 5, 197 and 198 decide a return. Attribute 199 counts link errors (the cable or the port, not the media). Attribute 183 is specific to the vendor.
 - **badblocks:** a destructive test of the full surface of a drive.
 - **LBA:** the unit in which SMART counts reads and writes.
@@ -56,9 +56,9 @@ This file explains the terms of this documentation. A term that has a decision b
 - **`midclt`:** the CLI of the TrueNAS middleware. It is the reliable way to see what a build supports.
 - **cgroup:** the process group of systemd. The cgroup of a login session is killed at logout, so long jobs use `systemd-run`.
 - **container format:** the wrapper around the streams of a media file. The metadata of Matroska (`.mkv` and `.webm`) can be edited in place with `mkvpropedit`. The metadata of MP4 is before the media, so an edit writes the full file again.
-- **LFS:** Linux From Scratch. It is a related project with its own repository.
+- **LFS:** Linux From Scratch. It is a related project. It will get its own repository.
 
 ## Outside this repository
 
 - The network of the house: its main switch, the VLANs and possible routers. It is a separate plan.
-- The code of the quiz and homepage project. It has its own repository. Where it runs is in [docs/network.md](docs/network.md).
+- The code of the quiz and homepage project. It will get its own repository. Where it runs is in [docs/network.md](docs/network.md).
