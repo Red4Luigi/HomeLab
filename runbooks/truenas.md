@@ -66,25 +66,24 @@ The properties of the account:
 | Property | Value |
 | --- | --- |
 | Password | Set. The web UI uses it for the login, so "Disable Password" locks you out of the web UI |
-| Shell | `zsh`. It must be a real shell: with `nologin`, the login to the web UI works and SSH fails, which looks like a broken key |
-| Home | `NAS_Storage/home/<user>`, on the pool and never on the boot SSD. The boot device can be replaced, and TrueNAS writes `authorized_keys` into the home |
+| Shell | `zsh`. It must be a real shell: with `nologin`, the login to the web UI works and SSH fails |
+| Home | `NAS_Storage/home/<user>`, on the pool. TrueNAS writes `authorized_keys` into the home |
 | SSH key | The `id_ed25519` of the workstation, with a passphrase ([security.md](../docs/security.md)) |
-| SMB access | Off. Shares are for accounts without privileges |
+| SMB access | Off |
 | Sudo | *Allowed Sudo Commands (No Password)*: `ALL`. Nothing in *Allowed sudo commands* |
 
-- **Fill in only the sudo field without password.** `ALL` in both fields makes two rules: `ALL=(ALL) ALL` and `ALL=(ALL) NOPASSWD: ALL`. In sudoers, the last match wins, so the password prompt can come back while the web UI looks correct. Test with `sudo -k; sudo true`. `sudo -l` shows the rules in their order.
+- Fill in only the sudo field without password. `ALL` in both fields makes two rules: `ALL=(ALL) ALL` and `ALL=(ALL) NOPASSWD: ALL`. In sudoers, the last match wins, so the password prompt can come back while the web UI looks correct. Test with `sudo -k; sudo true`. `sudo -l` shows the rules in their order.
 - A change to the groups needs a new login. A change to the own sudo entry of the user does not.
-- Do not add files to `/etc/sudoers.d/`, for example for `timestamp_timeout`. TrueNAS makes the system configuration again from its database.
-- **SSH accepts only keys.** Set it at the service: in *System Settings → Services → SSH*, clear **Allow Password Authentication**. Prove that the key works first.
+- SSH accepts only keys. Set it at the service: in *System Settings → Services → SSH*, clear **Allow Password Authentication**. Prove that the key works first.
 - The first login with `zsh` starts `zsh-newuser-install`. That proves that the home is real. Answer **(2)** for the `.zshrc` that Debian recommends. With (0) or (q), there is no permanent history. Increase `HISTSIZE` and `SAVEHIST` from 1000.
 - Use one SSH key for each client device, not one for each server.
-- The menu labels change between releases. The structure stays.
+- The menu labels change between releases.
 
 ### API keys
 
-- **TrueNAS revokes an API key of a user the first time that the key arrives over plain HTTP.** A reset gives a new string. TrueNAS judges the connection that it receives. So a client that uses `https://truenas.donny.lu` still loses its key if Caddy forwards over HTTP. That is why the upstream of Caddy for TrueNAS is HTTPS ([Caddy runbook](caddy.md), "Caddyfile").
+- TrueNAS revokes an API key of a user the first time that the key arrives over plain HTTP. A reset gives a new string. TrueNAS judges the connection that it receives. So a client that uses `https://truenas.donny.lu` still loses its key if Caddy forwards over HTTP. That is why the upstream of Caddy for TrueNAS is HTTPS ([Caddy runbook](caddy.md), "Caddyfile").
 - A key has the privileges of its user. So a key for a tool that only reads must be the key of a user with a read-only role, not of the admin account.
-- **The key of Homepage** is the key of a dedicated user: *TrueNAS Access* → **Readonly Admin**, *Disable Password* on, no SMB, no shell, no SSH, and the home `/var/empty`. The API key is the only credential of that user. Readonly Admin can read all the configuration, not only the statistics of the widget. A narrower custom role is possible, but it is not set.
+- The key of Homepage is the key of a dedicated user: *TrueNAS Access* → **Readonly Admin**, *Disable Password* on, no SMB, no shell, no SSH, and the home `/var/empty`. The API key is the only credential of that user. Readonly Admin can read all the configuration, not only the statistics of the widget. A narrower custom role is possible, but it is not set.
 
 ## Network
 
@@ -95,8 +94,8 @@ The NAS has static addresses for IPv4 and IPv6 since 31 August 2026.
 | IPv4 | `<NAS_IPV4>/24`. The reservation on the router stays, so that no other device gets the address |
 | IPv6 | `<NAS_ULA>/64`, a static ULA. Its host part mirrors the IPv4 address |
 
-- **TrueNAS hides the fields for static addresses while DHCP is on.** Clear DHCP to show them. From then on, both stacks are manual. *Autoconfigure IPv6* is not the control for this.
-- **Set the gateway and the nameservers in *Network → Global Configuration* at the same time.** They came from DHCP. Without them, the NAS still answers on the LAN, but it cannot reach the outside. Remote access, certificate renewals and image pulls then fail.
+- TrueNAS hides the fields for static addresses while DHCP is on. Clear DHCP to show them. From then on, both stacks are manual. *Autoconfigure IPv6* is not the control for this.
+- Set the gateway and the nameservers in *Network → Global Configuration* at the same time. They came from DHCP. Without them, the NAS still answers on the LAN, but it cannot reach the outside. Remote access, certificate renewals and image pulls then fail.
 - A change to an interface applies behind a timer that confirms or reverts. Do not confirm settings that you did not test. This machine has no IPMI, so a bad configuration that is confirmed needs a monitor and a keyboard.
 - The address is a static ULA, not the SLAAC address. The EUI-64 form of SLAAC contains the MAC address, and the internal DNS records point at this address ([network.md](../docs/network.md)).
 
@@ -105,7 +104,7 @@ The NAS has static addresses for IPv4 and IPv6 since 31 August 2026.
 The alerts deliver since 12 August 2026. E-mail was the first attempt. The alert service sets only the recipient. The outgoing mail is a separate setting (*System Settings → General → Email*). When it is not set, nothing is sent, with no error. The reason for Telegram is in [services.md](../docs/services.md).
 
 1. In Telegram, send `/newbot` to **@BotFather**. It gives the bot token.
-2. Send a message to your bot. Until you do, `getUpdates` returns `ok: true, result: []`, which looks like a bad token.
+2. Send a message to your bot. Until you do, `getUpdates` returns an empty result.
 3. Open `https://api.telegram.org/bot<TOKEN>/getUpdates`, and read `message.chat.id`. As an alternative, ask @userinfobot: for a private chat, your user ID is the chat ID.
 4. In *Alert Settings*, add Telegram with the token and the chat ID.
 5. Test at the level `INFO`.
@@ -121,7 +120,7 @@ curl -s "https://api.telegram.org/bot<TOKEN>/sendMessage?chat_id=<ID>&text=hello
 sudo journalctl --since "10 min ago" | grep -i telegram
 ```
 
-The token is a credential. Do not put it in this repository. It is also in the config backup. The alert messages send drive serials and host names off the network, which is accepted ([services.md](../docs/services.md)).
+The token is a credential. Do not put it in this repository. It is also in the config backup. The alert messages send drive serials and host names off the network ([services.md](../docs/services.md)).
 
 ## Config backup
 

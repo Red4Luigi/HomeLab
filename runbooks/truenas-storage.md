@@ -18,14 +18,14 @@ The real values are not in this repository. The map from bay to serial to port i
 | `SATA6G_1` | IronWolf | A degraded port that the burn-in cleared. Do not change its cable (see below) |
 | `SATA6G_2` | IronWolf | |
 | `SATA6G_3` | IronWolf | |
-| `SATA6G_4` | Intenso SSD | Boot. It is the one device that SATA II would slow down |
+| `SATA6G_4` | Intenso SSD | Boot |
 | `SATA3G_5` and `SATA3G_6` | Empty | `ata5: DUMMY` and `ata6: DUMMY`. The OS does not get them, and they are not tested ([hardware.md](../docs/hardware.md)) |
 
 To map the ports, use `ls -l /dev/disk/by-path/`: `ata-N` is `SATA6G_N`. The `sdX` letters change between boots. ZFS finds the members of the pool by GUID. So the port order is important only when you decide which drive to remove.
 
 ### `SATA6G_1`
 
-Two of the four cables do not start a drive on this port, but they operate at 6 Gb/s on ports 2 and 4. The other two cables work on this port. So the port is the fault, probably worn contacts on a board that is 13 years old. All four cables are good.
+The port is degraded, and only some cables start a drive on it. The diagnosis is in the [build log of phase 1](../build-log/phase-1.md).
 
 The burn-in cleared the port on 11 August: attribute `199` was zero after approximately 14 hours of I/O at full rate, with no link resets and 6.0 Gb/s all the time. Keep the cable that works. A looser connector brings back a drive that never appears. To examine the port again, see "Is the SATA link healthy?" in [commands.md](../commands.md).
 
@@ -35,7 +35,7 @@ The burn-in cleared the port on 11 August: attribute `199` was zero after approx
 | --- | --- |
 | Topology | 1 × RAIDZ1 of 3 × 3.64 TiB, with no auxiliary vdevs ([storage.md](../docs/storage.md)) |
 | `ashift` | 12. Verified with `zpool get ashift NAS_Storage` immediately after the pool was made. It is fixed for the life of the vdev |
-| Encryption | Off. A lost key loses the pool, and no threat here is worth that risk. A child dataset can still be encrypted by itself |
+| Encryption | Off. If the key is lost, the pool is lost. A child dataset can still be encrypted by itself |
 | Usable | 7.28 TiB before the overhead. The plan uses approximately 5.7 TiB |
 
 SMART was read again on all three drives immediately before the pool was made: attributes 5, 197, 198, 187 and 188 were zero, and `183` was still 6 on one drive.
@@ -58,8 +58,6 @@ In `media`, the folders are plain directories, never datasets:
 ```bash
 mkdir -p /mnt/NAS_Storage/media/library/{movies,series,anime}
 ```
-
-A child dataset below a parent that is bind-mounted can look empty in a container. That is one more reason to use directories.
 
 `personal` uses NFSv4 ACLs, so the POSIX group and the setgid bit below do not apply to it. Accounts for other persons are deferred, because nobody else stores data here now.
 
@@ -127,7 +125,7 @@ A bulk rewrite (a new tag, a remux or a new encode) costs double until the snaps
 TrueNAS makes the scrub task with the pool. Its settings since 11 August 2026: each month on the 1st at 00:00, with a threshold of 25 days. Auto TRIM is off, because the drives are HDDs.
 
 - *Threshold days* skips a scheduled run, with no message, if a scrub ran in that number of days. With 30, the run of 1 March is skipped each year, because 1 February to 1 March is 28 days. Keep the threshold below the shortest interval of the schedule.
-- The first scrub took 1 second on an empty pool. It proves that the task works, and nothing more.
+- The first scrub took 1 second on an empty pool. It proves only that the task works.
 
 ## SMART on 25.10
 
@@ -143,9 +141,8 @@ done
 ```
 
 - Select the drives by model, never by `sdX`. That also keeps the serials out of the job.
-- The planned schedule: a long test each month on the 15th, and a short test each week in the middle of the week. Then the tests do not run with the scrub or with the snapshots of Sunday.
+- The planned schedule: a long test each month on the 15th, and a short test each week in the middle of the week. Do not schedule a test at the same time as the scrub (the 1st) or the Sunday snapshots.
 - A scrub and a SMART test do different work. The scrub examines the checksums of the data. The SMART test examines the mechanics of the drive.
-- Scrutiny is the option if a dashboard for the SMART history becomes necessary.
 
 ## A bulk copy from Windows
 
@@ -168,8 +165,6 @@ Use this procedure for a large copy from a Windows machine to a share. The copy 
 4. Set the setgid bit again (see "Permissions: the media group").
 5. Remove the share.
 
-- Never use `/MIR` or `/PURGE` from a source that holds only new files. They delete everything in the destination that is not in the source.
 - An exit code of `robocopy` below 8 is a success. `1` means that files were copied.
-- On a gigabit link, `robocopy` is not faster than Explorer: approximately 3 to 4 hours for each TB.
 - A transfer that stays near 11 MB/s is a 100 Mb/s link.
 - Keep the source until a backup exists and a restore from it was done ([backup.md](../docs/backup.md)).
