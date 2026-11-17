@@ -133,4 +133,4 @@ The config backup is made by hand: *System Settings → General → Manage Confi
 
 ## The UPS service
 
-This host is the NUT master ([power.md](../docs/power.md)). The UPS service stays stopped until the UPS is installed.
+This host is the NUT master ([power.md](../docs/power.md)). The UPS service stays stopped until the USB cable of the UPS is connected to this host.

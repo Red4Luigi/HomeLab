@@ -16,7 +16,7 @@ The power management of the BIOS is on. The drives do not spin down: the wear of
 
 ## The UPS
 
-The UPS is a CyberPower CP900EPFCLCD. It is line-interactive and gives a pure sine wave, which is safe for PSUs with active PFC. Its arrival test is done ([build-checklist.md](build-checklist.md)). The installation in the rack and the NUT configuration are planned.
+The UPS is a CyberPower CP900EPFCLCD. It is line-interactive and gives a pure sine wave, which is safe for PSUs with active PFC. Its arrival test is done ([build-checklist.md](build-checklist.md)). It is installed in the rack, and the NAS, the Pi and the switch are on it. The USB cable to the NAS and the NUT configuration are planned.
 
 - **Size.** The UPS is for the load that is always on: the NAS, the Pi and the switch, approximately 55 W. Its purpose is a clean shutdown (approximately 5 to 15 minutes), not operation through a power failure.
 - **The R1304 stays off the UPS.** It is the largest load, it has the highest peaks, and it is not always on.
