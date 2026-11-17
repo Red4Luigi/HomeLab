@@ -12,7 +12,7 @@ The reader did not read any card. It survived a reboot. Then it failed during th
 
 **Assumption.** A dead card.
 
-**Cause.** The reader. I tried another card, then another adapter. Then I tested the card in a laptop, and it read correctly. The reader had already failed before the write. A write of some GB at USB 2.0 speed is the heaviest continuous load that a cheap reader gets. A reader that loses power during a write is also a way to destroy a card. I flashed the card from the laptop.
+**Cause.** The reader. I tried another card, then another adapter. Then I tested the card in a laptop, and it read correctly. A write of some GB at USB 2.0 speed is the heaviest continuous load that a cheap reader gets. A reader that loses power during a write is also a way to destroy a card. I flashed the card from the laptop.
 
 ### FTL served an empty blocklist after a clean installation
 
@@ -28,7 +28,7 @@ The reader did not read any card. It survived a reboot. Then it failed during th
 
 **Fix.** `sudo systemctl restart pihole-FTL`. After that: `gravity blocked coccyxwickimp.com is 0.0.0.0`.
 
-**Next time.** Read `pihole.log` first. Its verdict for each query is the truth, and one command would have removed theories 1 and 3. `pihole status` reports the setting, not if a list is loaded. The two are independent, and the web UI shows only one of them.
+**Next time.** Read `pihole.log` first. Its verdict for each query is the truth, and one command would have removed theories 1 and 3. `pihole status` and the web UI report the setting, not if a list is loaded.
 
 ### The local name of the router resolved to the server of a stranger
 
