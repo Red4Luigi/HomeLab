@@ -97,7 +97,9 @@ The NAS has static addresses for IPv4 and IPv6 since 31 August 2026.
 - TrueNAS hides the fields for static addresses while DHCP is on. Clear DHCP to show them. From then on, both stacks are manual. *Autoconfigure IPv6* is not the control for this.
 - Set the gateway and the nameservers in *Network → Global Configuration* at the same time. They came from DHCP. Without them, the NAS still answers on the LAN, but it cannot reach the outside. Remote access, certificate renewals and image pulls then fail.
 - A change to an interface applies behind a timer that confirms or reverts. Do not confirm settings that you did not test. This machine has no IPMI, so a bad configuration that is confirmed needs a monitor and a keyboard.
-- The address is a static ULA, not the SLAAC address. The EUI-64 form of SLAAC contains the MAC address, and the internal DNS records point at this address ([network.md](../docs/network.md)).
+- The internal DNS records point at the static ULA, not at a SLAAC address ([network.md](../docs/network.md)).
+- The SLAAC addresses are stable privacy addresses, not the EUI-64 form. The EUI-64 form contains the MAC address, and each server that the NAS connects to over IPv6 sees the global address. Set `net.ipv6.conf.enp3s0.addr_gen_mode` to `3` in *System Settings → Advanced → Sysctl*. With `3`, the kernel picks a new random secret at each start, so the SLAAC addresses change at each reboot.
+- The kernel makes the new addresses only when the interface starts again, so reboot after a change. A change with `sysctl -w` is lost at that reboot, before it applies. If the network card or its name changes, the key no longer matches, and the addresses go back to EUI-64 with no error. To check, `sysctl net.ipv6.conf.enp3s0.addr_gen_mode` must print `3`, and the output of `ip -6 addr show scope global` must have no `ff:fe`.
 
 ## Alerts through Telegram
 

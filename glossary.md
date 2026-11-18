@@ -26,6 +26,7 @@ This file explains the terms of this documentation. A term that has a decision b
 - **`aa`:** the flag for an authoritative answer. It is set when a server answered from its own records. It is absent when the server forwarded the query.
 - **ULA:** the private range of IPv6 (`fd00::/8`).
 - **SLAAC:** the automatic address configuration of IPv6. Its EUI-64 form puts the MAC address of the interface in the address.
+- **stable privacy address:** a SLAAC address that the host makes from the prefix, the interface and a secret (RFC 7217). It does not contain the MAC address ([TrueNAS runbook](runbooks/truenas.md)).
 - **subnet router:** a Tailscale node that forwards traffic for a full LAN.
 - **exit node:** a Tailscale node that takes the default route. The NAS must never be one ([docs/network.md](docs/network.md)).
 - **MagicDNS:** the name service of Tailscale. It sends resolver settings to the clients.

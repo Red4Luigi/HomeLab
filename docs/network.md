@@ -28,7 +28,7 @@ Give each internal name an `AAAA` record together with its `A` record. Without t
 
 So the name works after a cache flush, and it fails again in less than one hour. This problem cost two days ([build log of phase 2](../build-log/phase-2.md)).
 
-The `AAAA` record points at a static ULA of the NAS. Do not use the SLAAC address, because it contains the MAC address. The configuration is in the section *Network* of the [TrueNAS runbook](../runbooks/truenas.md).
+The `AAAA` record points at a static ULA of the NAS. Do not use a SLAAC address, because it changes at each reboot. The configuration is in the section *Network* of the [TrueNAS runbook](../runbooks/truenas.md).
 
 Two other fixes were rejected:
 
