@@ -191,6 +191,17 @@ dig AAAA <name> @<resolver-ip>
 - NXDOMAIN stays in a cache like each other answer. If a client asks for a name before its record exists, the name stays "missing" for the negative TTL.
 - Compare `A` and `AAAA`. With `aa`, Pi-hole answered from its records. Without `aa`, it forwarded the query. A forwarded `AAAA` query that returns NXDOMAIN denies the full name ([network.md](docs/network.md)).
 
+## Which ports can the internet reach?
+
+```bash
+ss -tlnH                             # each TCP listener. [::] means each IPv6 address
+ip -6 addr show scope global         # the global addresses. The internet cannot reach a ULA (fdXX:)
+```
+
+- Scan from outside the network, never from the LAN or over Tailscale. Scan each port that `ss` shows, not only the common ports.
+- Before you trust a scan where each probe times out, scan a known open IPv6 port with the same tool. A tool that cannot reach IPv6 also gives a timeout.
+- How to read a timeout: [security.md](docs/security.md#no-inbound-port).
+
 ## How do I use a tool that the NAS does not have, one time?
 
 ```bash

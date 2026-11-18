@@ -13,10 +13,12 @@ There is no port forward, no DMZ and no dynamic DNS. So the router is never part
 
 This state can change with no decision from a person:
 
-- A device can ask the router to open a port for itself (UPnP).
+- A device can ask the router to open a port for itself (UPnP). UPnP is off on the router. Examine it again after a reset of the router.
 - IPv6 has no NAT. Only the IPv6 firewall of the router is between the internet and the global address of each device.
 
-Only a scan from outside proves that no port is open. The router settings and the public IPv4 address are examined. A scan of the global IPv6 address of the NAS is planned.
+Only a scan from outside proves that no port is open. On 18 Nov 2026, an online port scanner tested the public IPv4 address and the global IPv6 address of the NAS. It tested each port that the NAS listens on, and the common ports. Each probe timed out.
+
+The NAS has no host firewall, so it refuses a probe on a port with no listener. A timeout on such a port shows that the router dropped the probe. The same tool showed a known open IPv6 port as open, so the tool can reach IPv6. Do the scan again after a change or a reset of the router.
 
 ## The NAS
 
